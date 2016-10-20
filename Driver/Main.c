@@ -2,13 +2,17 @@
 #include <RASLib/inc/gpio.h>
 #include <RASLib/inc/time.h>
 #include <RASLib/inc/servo.h>
+#include <RASLib/inc/adc.h>
 
 static tBoolean initialized = false;
 static tServo *leftServo;
 static tServo *rightServo;
 static tADC *leftSensor;
 static tADC *rightSensor;
-static wallDistance = 10;
+static int wallDistance;
+
+float leftPosition;
+float rightPosition;
 
 void setup(void) {
     if (initialized) {
@@ -17,6 +21,9 @@ void setup(void) {
 
     initialized = true;
 
+    wallDistance = 10;
+    leftPosition = 0;
+    rightPosition = 1;
     leftServo = InitializeServo(PIN_B1);
     rightServo  = InitializeServo(PIN_B2);
     leftSensor = InitializeADC(PIN_B3);
@@ -36,7 +43,7 @@ void wallAdjust(void) {
       if (ADCRead(rightSensor) < wallDistance) {
           rightPosition -= 0.01f;
       }
-      else if (ADCREad(leftSensor) < wallDistance) {
+      else if (ADCRead(leftSensor) < wallDistance) {
           rightPosition += 0.01f;
       }
   }
@@ -45,8 +52,6 @@ void wallAdjust(void) {
 int main(void) {
     // Initialization code can go here
     setup();
-    float leftPosition = 0;
-    float rightPosition = 1;
 
     while (1) {
         wallAdjust();
