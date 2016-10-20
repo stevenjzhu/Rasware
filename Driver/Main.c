@@ -3,12 +3,14 @@
 #include <RASLib/inc/time.h>
 #include <RASLib/inc/servo.h>
 #include <RASLib/inc/adc.h>
+#include <RASLib/inc/linesensor.h>
 
 static tBoolean initialized = false;
 static tServo *leftServo;
 static tServo *rightServo;
 static tADC *leftSensor;
 static tADC *rightSensor;
+static tLineSensor *lineSensor;
 static int wallDistance;
 
 float leftPosition;
