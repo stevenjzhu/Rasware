@@ -58,6 +58,7 @@ int main(void) {
     while (1) {
         wallAdjust();
 
+        // Set servo speed
         SetServo(leftServo,leftPosition);
         SetServo(rightServo,rightPosition);
     }
