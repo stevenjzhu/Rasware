@@ -11,7 +11,7 @@ static tServo *rightServo;
 static tADC *leftSensor;
 static tADC *rightSensor;
 static tLineSensor *lineSensor;
-static int wallDistance;
+static float wallDistance;
 
 float leftPosition;
 float rightPosition;
@@ -23,17 +23,27 @@ void setup(void) {
 
   initialized = true;
 
-  wallDistance = 10;
-  leftPosition = 0;
-  rightPosition = 1;
-  leftServo = InitializeServo(PIN_B1);
-  rightServo  = InitializeServo(PIN_B2);
-  leftSensor = InitializeADC(PIN_B3);
-  rightSensor = InitializeADC(PIN_B4);
+  wallDistance = 0.5;
+  leftPosition = 1;
+  rightPosition = 0;
+  leftServo = InitializeServo(PIN_B2);
+  rightServo  = InitializeServo(PIN_B1);
+  leftSensor = InitializeADC(PIN_D0);
+  rightSensor = InitializeADC(PIN_D1);
 }
 
 void wallAdjust(void) {
-  if (ADCRead(leftSensor) < ADCRead(rightSensor)) {
+    float current = ADCRead(leftSensor);
+    if (current > wallDistance) {
+        leftPosition += 0.01f;
+    }
+    else if (current < wallDistance) {
+        leftPosition -= 0.01f;
+    }
+    else {
+        leftPosition = 1;
+    }
+ /* if (ADCRead(leftSensor) < ADCRead(rightSensor)) {
     if (ADCRead(leftSensor) < wallDistance) {
       leftPosition += 0.01f;
     }
@@ -48,13 +58,13 @@ void wallAdjust(void) {
     if (ADCRead(rightSensor) < wallDistance) {
       rightPosition -= 0.01f;
     }
-    else if (ADCRead(leftSensor) < wallDistance) {
+    else if (ADCRead(rightSensor) < wallDistance) {
       rightPosition += 0.01f;
     }
     else {
       rightPosition = 1;
     }
-  }
+  }*/
 }
 // The 'main' function is the entry point of the program
 int main(void) {
