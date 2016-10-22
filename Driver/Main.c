@@ -13,77 +13,58 @@ static tServo *rightServo;
 static tADC *leftSensor;
 static tADC *rightSensor;
 static tLineSensor *lineSensor;
-static float wallDistance;
 
+static float wallDistance; //distance from wall
 float leftPosition;
 float rightPosition;
+float last; //indicates last distance from wall
+int lastOp; //indicates last operation (0 for NULL, 1 for leftTurn,2 for rightTurn)
 
 void setup(void) {
-  if (initialized) {
-    return;
-  }
+	if (initialized) {
+		return;
+	  }
 
-  initialized = true;
+	initialized = true;
 
-  wallDistance = 20; //distance from wall
-  leftPosition = 1;
-  rightPosition = 0;
-  leftServo = InitializeServo(PIN_B2);
-  rightServo  = InitializeServo(PIN_B1);
-  leftSensor = InitializeADC(PIN_D0);
-  rightSensor = InitializeADC(PIN_D1);
+	wallDistance = 15; 
+	last = 15;
+	lastOp = 0;
+	leftPosition = 1;
+	rightPosition = 0;
+	leftServo = InitializeServo(PIN_B2);
+	rightServo  = InitializeServo(PIN_B1);
+	leftSensor = InitializeADC(PIN_D0);
+	rightSensor = InitializeADC(PIN_D1);
+}
+
+void leftTurn(int factor) {
+	leftPosition = factor*0.55;
+	rightPosition = factor*0.05;
+}
+
+void rightTurn(int factor) {
+	leftPosition = factor*0.95;
+	rightPosition = factor*0.45;
 }
 
 void wallAdjust(void) {
-    float current = 10.4/ADCRead(leftSensor)-6.5;
-    if (current > wallDistance) {
-        leftPosition -= 0.02f;
-        rightPosition -= 0.02f;
+    float current = 7.83/ADCRead(leftSensor)-1.66;
+    float factor = abs(current-wallDistance)/wallDistance;
+//    Printf("%f,%f\n",current,ADCRead(leftSensor));
+    if (abs(current-wallDistance)<abs(last-wallDistance)) {
+	if (lastOp = 1) {leftTurn(factor);}
+	else {rightTurn(factor);}
     }
-    else if (current < wallDistance) {
-        leftPosition += 0.02f;
-        rightPosition += 0.02f;
+    else if (abs(current-wallDistance)>abs(last-wallDistance)) {
+	if (lastOp = 1) {rightTurn(factor);}
+	else {leftTurn(factor);}
     }
     else {
-        leftPosition = 1;
-        rightPosition = 0;
-    }
-
-    if (leftPosition > 1.0f) {
-	leftPosition = 1.0f;
-    }
-    else if (leftPosition < 0.6f) {
-        leftPosition = 0.6f;
-    }
-    if (rightPosition > 0.4f) {
-	rightPosition = 0.4f;
-    }
-    else if (rightPosition < 0.0f) {
+        leftPosition = 1.0f;
         rightPosition = 0.0f;
-    }   
+    }
     Printf("%f %f\n",leftPosition,rightPosition);
-/* if (ADCRead(leftSensor) < ADCRead(rightSensor)) {
-    if (ADCRead(leftSensor) < wallDistance) {
-      leftPosition += 0.01f;
-    }
-    else if (ADCRead(leftSensor) > wallDistance) {
-      leftPosition -= 0.01f;
-    }
-    else {
-      leftPosition = 0;
-    }
-  }
-  else if (ADCRead(leftSensor) > ADCRead(rightSensor)) {
-    if (ADCRead(rightSensor) < wallDistance) {
-      rightPosition -= 0.01f;
-    }
-    else if (ADCRead(rightSensor) < wallDistance) {
-      rightPosition += 0.01f;
-    }
-    else {
-      rightPosition = 1;
-    }
-  }*/
 }
 
 int main(void) {
@@ -95,6 +76,6 @@ int main(void) {
     // Set servo speed
     SetServo(leftServo,leftPosition);
     SetServo(rightServo,rightPosition);
-   // Wait(0.25);
+    //Wait(0.1);
   }
 }
