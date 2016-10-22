@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <RASLib/inc/common.h>
 #include <RASLib/inc/gpio.h>
 #include <RASLib/inc/time.h>
@@ -23,7 +25,7 @@ void setup(void) {
 
   initialized = true;
 
-  wallDistance = 0.5;
+  wallDistance = 20; //distance from wall
   leftPosition = 1;
   rightPosition = 0;
   leftServo = InitializeServo(PIN_B2);
@@ -33,17 +35,34 @@ void setup(void) {
 }
 
 void wallAdjust(void) {
-    float current = ADCRead(leftSensor);
+    float current = 10.4/ADCRead(leftSensor)-6.5;
     if (current > wallDistance) {
-        leftPosition += 0.01f;
+        leftPosition -= 0.02f;
+        rightPosition -= 0.02f;
     }
     else if (current < wallDistance) {
-        leftPosition -= 0.01f;
+        leftPosition += 0.02f;
+        rightPosition += 0.02f;
     }
     else {
         leftPosition = 1;
+        rightPosition = 0;
     }
- /* if (ADCRead(leftSensor) < ADCRead(rightSensor)) {
+
+    if (leftPosition > 1.0f) {
+	leftPosition = 1.0f;
+    }
+    else if (leftPosition < 0.6f) {
+        leftPosition = 0.6f;
+    }
+    if (rightPosition > 0.4f) {
+	rightPosition = 0.4f;
+    }
+    else if (rightPosition < 0.0f) {
+        rightPosition = 0.0f;
+    }   
+    Printf("%f %f\n",leftPosition,rightPosition);
+/* if (ADCRead(leftSensor) < ADCRead(rightSensor)) {
     if (ADCRead(leftSensor) < wallDistance) {
       leftPosition += 0.01f;
     }
@@ -66,16 +85,16 @@ void wallAdjust(void) {
     }
   }*/
 }
-// The 'main' function is the entry point of the program
+
 int main(void) {
     // Initialization code can go here
   setup();
 
   while (1) {
     wallAdjust();
-
-      // Set servo speed
+    // Set servo speed
     SetServo(leftServo,leftPosition);
     SetServo(rightServo,rightPosition);
+   // Wait(0.25);
   }
 }
