@@ -3,18 +3,28 @@
 #include <RASLib/inc/common.h>
 #include <RASLib/inc/gpio.h>
 #include <RASLib/inc/time.h>
-#include <RASLib/inc/servo.h>
+#include <RASLib/inc/motor.h>
 #include <RASLib/inc/adc.h>
 #include <RASLib/inc/linesensor.h>
 
-static tBoolean initialized = false;
-static tServo *leftServo;
-static tServo *rightServo;
-static tADC *leftSensor;
-static tADC *rightSensor;
-static tLineSensor *lineSensor;
+//define components
+tBoolean initialized = false;
+tMotor *leftMotor;
+tMotor *rightMotor;
+tADC *leftSensor;
+tADC *rightSensor;
+tLineSensor *lineSensor;
 
-static float wallDistance; //distance from wall
+//define constants
+#define wallDistance 15 //distance from wall in cm
+#define leftMotorPin PIN_B2
+#define rightMotorPin PIN_B1
+#define leftSensorPin PIN_D0
+#define rightSensorPin PIN_D1
+#define blueLEDPin PIN_F2
+#define greenLEDPin PIN_F3
+
+//variables
 float leftPosition;
 float rightPosition;
 float last; //indicates last distance from wall
@@ -27,27 +37,28 @@ void setup(void) {
 
 	initialized = true;
 
-	wallDistance = 15; 
-	last = 15;
+	last = wallDistance;
 	lastOp = 0;
 	leftPosition = 1;
-	rightPosition = 0;
-	leftServo = InitializeServo(PIN_B2);
-	rightServo  = InitializeServo(PIN_B1);
-	leftSensor = InitializeADC(PIN_D0);
-	rightSensor = InitializeADC(PIN_D1);
+	rightPosition = 1;
+	leftMotor = InitializeServoMotor(leftMotorPin, false);
+	rightMotor  = InitializeServoMotor(rightMotorPin, true);
+	leftSensor = InitializeADC(leftSensorPin);
+	rightSensor = InitializeADC(rightSensorPin);
+	ADCReadContinuously(leftSensor,0.01);
+	ADCReadContinuously(rightSensor,0.01);
 }
 
 void leftTurn(float factor) {
 	//Printf("Turning left ");
-	leftPosition =  0.95-factor*0.40;
-	rightPosition = 0.45-factor*0.40;
+	leftPosition = 0.95-factor*0.90;
+	rightPosition = 0.05+factor*0.90;
 }
 
 void rightTurn(float factor) {
 	//Printf("Turning right ");
-	leftPosition = 0.55+factor*0.40;
-	rightPosition = 0.05+factor*0.40;
+	leftPosition = 0.05+factor*0.90;
+	rightPosition = 0.95-factor*0.90;
 }
 
 void wallAdjust(void) {
@@ -57,9 +68,9 @@ void wallAdjust(void) {
 	if (factor > 1) {factor = 1;}
 //    Printf("%f,%f\n",current,ADCRead(leftSensor));
 
-	if (current == wallDistance) {
+	if (abs(current-wallDistance) < 3) {
 		leftPosition = 1.0f;
-		rightPosition = 0.0f;
+		rightPosition = 1.0f;
     }
     else {
 		if (abs(current-wallDistance)<abs(last-wallDistance)) {
@@ -96,8 +107,7 @@ int main(void) {
 		//Printf("%f,%f\n",leftPosition,rightPosition);
 
 
-		SetServo(leftServo,leftPosition);
-		SetServo(rightServo,rightPosition);
-		Wait(0.1);
+		SetMotor(leftMotor,leftPosition);
+		SetMotor(rightMotor,rightPosition);
 	}
 }
