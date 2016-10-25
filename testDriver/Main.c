@@ -16,7 +16,7 @@ tADC *rightSensor;
 tLineSensor *lineSensor;
 
 //define constants
-#define min 15.0f //distance from wall in cm
+#define min 10.0f //distance from wall in cm
 #define max 20.0f
 #define leftMotorPin PIN_B2
 #define rightMotorPin PIN_B1
@@ -25,6 +25,10 @@ tLineSensor *lineSensor;
 #define blueLEDPin PIN_F2
 #define greenLEDPin PIN_F3
 
+//variables
+float leftPower;
+float rightPower;
+
 void setup(void) {
 	if (initialized) {
 		return;
@@ -32,6 +36,7 @@ void setup(void) {
 
 	initialized = true;
 
+	rightPower = -1;
 	leftMotor = InitializeServoMotor(leftMotorPin, false);
 	rightMotor  = InitializeServoMotor(rightMotorPin, true);
 	leftSensor = InitializeADC(leftSensorPin);
@@ -46,25 +51,23 @@ int main(void) {
 
 	while (1) {
 		float current = 7.83/ADCRead(leftSensor)-1.66;
-
-		if (current > max) {
-			float power = 1.0-0.5*(current-max)/10.0f;
-			SetMotor(leftMotor,power);
-			Wait(0.5);
-			SetMotor(leftMotor,1);
-			SetMotor(rightMotor,power);
-			Wait(0.5);
-		}
-		if (current < min) {
-			float power = 1.0-0.5*(min-current)/10.0f;
-			SetMotor(rightMotor,power);
-			Wait(0.5);
-			SetMotor(leftMotor,power);
-			SetMotor(rightMotor,1);
-			Wait(0.5);
-		}
-
 		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
+        if(GetTimeUS()/1000){
+            rightPower += 0.1;
+        }
+        SetMotor(rightMotor, rightPower);
+
+        if(current > max){
+            SetMotor(leftMotor, 0.5);
+            SetMotor(rightMotor, 1);
+        }
+
+        // follow wall
+        if(current < min){
+            SetMotor(rightMotor, -1);
+        }else{
+            SetMotor(rightMotor, 1);
+        }
+        SetMotor(leftMotor, 1);
 	}
 }
