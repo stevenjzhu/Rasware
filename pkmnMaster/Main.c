@@ -46,16 +46,17 @@ tBoolean runPrimary;
 tBoolean running;
 
 void setup();
-int getLine();
-float getDistance(tADC *sensorPin);
-tBoolean isBlack(float line);
-tBoolean isLineSplit();
-tBoolean isLineThick();
-tBoolean isTheWall();
 void chooseLeft();
 void chooseRight();
 void choosePrimary();
 void chooseSecondary();
+int getLine();
+float getDistance(tADC *sensorPin);
+tBoolean isLine();
+tBoolean isBlack(float line);
+tBoolean isLineSplit();
+tBoolean isLineThick();
+tBoolean isTheWall();
 void walkLine();
 void turnAround();
 void walkForward(tBoolean onForward);
@@ -71,79 +72,118 @@ int main(void) {
 	// walkForward(true);
 
     //use button to choose side
-    // while(!running){
+    // reportZone(1) // green
+    // running = false;
+    // while(!running){+
     // 	CallOnPinRising(chooseLeft, 0, PIN_F0);
     // 	CallOnPinRising(chooseRight,0, PIN_F4);
     // }
 
     //use button to choose stage
+    reportZone(2) // blue
+    running = true;
     while(!running) {
     	CallOnPinRising(choosePrimary, 0, PIN_F0);
     	CallOnPinRising(chooseSecondary,0, PIN_F4);
     }
 
     if (runPrimary) {
-    	// zone1
+    	// zone1: escape the box
 		reportZone(1); // green
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 1);
 		while(!isLineThick()) {
-			SetMotor(leftMotor, 1);
-			SetMotor(rightMotor, 1);
 		}
 		walkForward(true);
 	
-		// zone2
+		// zone2: get the middle one
 		reportZone(2); // blue
 		while(!isLineSplit()) {
 			walkLine();
 		}
 		walkForward(true);	//to make sure we can capture the pokemon in the center
+		turn90Degree(true, driveLeft)
+		walkForward(true);
+	
+		// zone3: find the wall
+		reportZone(3); // light blue
+		while(!isTheWall(!driveLeft)) {
+			walkLine();
+		}
+		walkForward(true);
+	
+		// zone4: get the ball
+		reportZone(4); // black
+		grabSideBall(!driveLeft);
+		walkForward(true);
+	
+		// zone5: capture and turn aronud
+		reportZone(5); // green
+		while(!isTheWall(!driveLeft)) {
+			walkLine();
+		}
+		walkForward(true);
 		turnAround();
 		walkForward(true);
 	
-		// zone3
-		reportZone(3); // light blue
-		while(!isLineThick()) {
-			walkLine();
-		}
-		walkForward(true);
-	
-		// zone4
-		reportZone(4); // black
-		while(!isLineThick()) {
-			SetMotor(leftMotor, 1);
-			SetMotor(rightMotor, 1);
-		}
-		walkForward(true);
-	
-		// zone5
-		reportZone(5); // green
-		while(!isTheWall()) {
-			walkLine();
-		}
-		walkForward(true);
-	
-		// zone6
+		// zone6: detect edge of our field
 		reportZone(6); // blue
-		grabSideBall(driveLeft);
-	
-		// zone7
-		reportZone(7); // light blue
 		while(!isLineSplit()) {
 			walkLine();
+		}
+		walkForward(true);
+		walkForward(true);
+		walkForward(true);
+	
+		// zone7: crossing fields
+		reportZone(7); // light blue
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 1);
+		while(!isLine()) {
 		}
 		turn90Degree(true, driveLeft);
 		walkForward(true);
 	
-		// zone8
+		// zone8: get'em!!!
 		reportZone(8); // black
 		while(true) { // TODO, what to detect the end?
 			walkLine();
 		}
 	}
 	else {
-		reportZone(9); // green
-		while(true) {
-			// TBD, grab pokeballs continuously?
+		driveLeft = !driveLeft; // switch since face different way
+		// zone1: escape the box
+		reportZone(1); // green
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 1);
+		while(!isLineThick()) {
+		}
+		walkForward(true);
+	
+		// zone2: find the wall
+		reportZone(2); // blue
+		while(!isTheWall(driveLeft)) {
+			walkLine();
+		}
+		walkForward(true);
+	
+		// zone3: get the ball
+		reportZone(3); // light blue
+		grabSideBall(driveLeft);
+		walkForward(true);
+	
+		// zone4: find intersection to the pokemon
+		reportZone(4); // black
+		while(!isLineSplit()) {
+			walkLine();
+		}
+		turn90Degree(true, driveLeft);
+		walkForward(true);
+	
+		// zone5: go and get it
+		reportZone(5); // black
+		while(true) { // TODO, what to detect the end?
+			walkLine();
 		}
 	}
 }
@@ -214,7 +254,7 @@ int getLine(void) { // TODO
 	LineSensorReadArray(lineSensor, line);
 
     for (i = 0; i < nLineSensor; i++) {
-        if (line[i] > 0.3) {
+        if (isBlack(line[i])) {
         	total += i;
         	count += 1;
         	lineFound = true;	        
@@ -230,6 +270,19 @@ float getDistance(tADC *sensor) {
 	// return 7.83/ADCRead(sensorPin)-1.66;
 	// TODO: Average value for more accurate reading
 	return ADCRead(sensor);
+}
+
+tBoolean isLine(void) {
+	float line[8];
+	int i, state = 0;
+
+	LineSensorReadArray(lineSensor, line);
+
+	for(i=0; i<nLineSensor; i++) {
+		if(isBlack(line[i]))
+			return true;
+	}
+	return false;
 }
 
 tBoolean isLineSplit(void) {
@@ -260,9 +313,9 @@ tBoolean isLineThick() {
 	return cnt > 2; // more than 2 splited black boxes
 }
 
-tBoolean isTheWall() {
+tBoolean isTheWall(tBoolean dL) {
 	tADC *focusSensor;
-	if(driveLeft)
+	if(dL)
 		focusSensor = leftSensor;
 	else
 		focusSensor = rightSensor;
@@ -275,9 +328,9 @@ void walkLine(void) { // TODO
 
     switch(current){
     	case 0:  //turn right
-    		//blueLight();
-    		SetServo(gateServo,0.5);
-    		closed = true;
+    		// blueLight();
+    		// SetServo(gateServo,0.5);
+    		// closed = true;
     		while (!(current == 3 || current == 4)) {
 	    		SetMotor(leftMotor,0.5);
 	    		SetMotor(rightMotor,-0.2);
@@ -286,8 +339,8 @@ void walkLine(void) { // TODO
 	    	//greenLight();
     		break;
     	case 1:
-    		SetServo(gateServo,0.5);
-    		closed = true;
+    		// SetServo(gateServo,0.5);
+    		// closed = true;
     		SetMotor(leftMotor,0.5);
     		SetMotor(rightMotor,0);
     		break;
@@ -308,21 +361,21 @@ void walkLine(void) { // TODO
     		SetMotor(rightMotor,0.5);
     		break;
     	case 6:
-    		SetServo(gateServo,0.5);
-    		closed = true;
+    		// SetServo(gateServo,0.5);
+    		// closed = true;
     		SetMotor(leftMotor,0);
     		SetMotor(rightMotor,0.5);
     		break;
     	case 7:  //turn left
-    		//blueLight();
-    		SetServo(gateServo,0.5);
+    		// blueLight();
+    		// SetServo(gateServo,0.5);
     		closed = true;
     		while (!(current == 3 || current == 4)) {
 	    		SetMotor(leftMotor,-0.2);
 	    		SetMotor(rightMotor,0.5);
 	    		current = getLine();
 	    	}
-	    	//greenLight();
+	    	// greenLight();
     		break;
     }
     if (closed) {
@@ -341,7 +394,7 @@ void turnAround(void) {
 void walkForward(tBoolean onForward) {
 	SetMotor(leftMotor, 1);
 	SetMotor(rightMotor,1);
-	Wait(0.6);
+	Wait(0.3);
 	SetMotor(leftMotor, 0);
 	SetMotor(rightMotor,0);
 }
