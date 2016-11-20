@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <RASLib/inc/common.h>
 #include <RASLib/inc/gpio.h>
 #include <RASLib/inc/time.h>
@@ -44,14 +42,17 @@ tLineSensor *lineSensor;
 
 //variables
 tBoolean driveLeft;
+tBoolean running;
 
 void setup();
-tBoolean isBlack(float line);
 int getLine();
 float getDistance(tADC *sensorPin);
+tBoolean isBlack(float line);
 tBoolean isLineSplit();
 tBoolean isLineThick();
 tBoolean isTheWall();
+void chooseLeft();
+void chooseRight();
 void walkLine();
 void turnAround();
 void walkForward(tBoolean onForward);
@@ -61,11 +62,15 @@ void turn90Degree(tBoolean onForward, tBoolean onLeft);
 void reportZone(int zone);
 
 int main(void) {
-    // Initialization code can go here
-// white -> red -> yellow -> green -> light blue -> blue -> purple -> black
+	// white -> red -> yellow -> green -> light blue -> blue -> purple -> isBlack
     reportZone(0); // black
 	setup();
 	// walkForward(true);
+
+    while(!running){
+    	CallOnPinRising(chooseLeft, 0, PIN_F0);
+    	CallOnPinRising(chooseRight,0, PIN_F4);
+    }
 
 	// zone1
 	reportZone(1); // green
@@ -80,6 +85,7 @@ int main(void) {
 	while(!isLineSplit()) {
 		walkLine();
 	}
+	walkForward(true);	//to make sure we can capture the pokemon in the center
 	turnAround();
 	walkForward(true);
 
@@ -93,7 +99,8 @@ int main(void) {
 	// zone4
 	reportZone(4); // black
 	while(!isLineThick()) {
-		walkLine();
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 1);
 	}
 	walkForward(true);
 
@@ -135,8 +142,9 @@ void setup(void) {
 	  }
 
 	initialized = true;
+	running = false;
 
-	driveLeft = true; // TODO, setting with built-in button?
+	//driveLeft = true; choose by pressing button
 
 	leftMotor = InitializeServoMotor(leftMotorPin, false);
 	rightMotor  = InitializeServoMotor(rightMotorPin, true);
@@ -146,6 +154,16 @@ void setup(void) {
 	ADCReadContinuously(leftSensor,0.01);
 	ADCReadContinuously(rightSensor,0.01);
 	lineSensor = InitializeGPIOLineSensor(lineSensorList);
+}
+
+void chooseLeft(void) {
+	running = true;
+	driveLeft = true;
+}
+
+void chooseRight(void) {
+	running = true;
+	driveLeft = false;
 }
 
 tBoolean isBlack(float line) {
@@ -175,9 +193,9 @@ int getLine(void) { // TODO
     return current;
 }
 
-float getDistance(tADC *sensorPin) {
+float getDistance(tADC *sensor) {
 	// return 7.83/ADCRead(sensorPin)-1.66;
-	return 1/ADCRead(sensorPin);
+	return ADCRead(sensor);
 }
 
 tBoolean isLineSplit(void) {
@@ -214,7 +232,7 @@ tBoolean isTheWall() {
 		focusSensor = leftSensor;
 	else
 		focusSensor = rightSensor;
-	return getDistance(focusSensor) < distanceOfTheWall;
+	return getDistance(focusSensor) > distanceOfTheWall;
 }
 
 void walkLine(void) { // TODO
