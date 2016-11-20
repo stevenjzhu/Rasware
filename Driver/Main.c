@@ -6,26 +6,33 @@
 #include <RASLib/inc/motor.h>
 #include <RASLib/inc/adc.h>
 #include <RASLib/inc/linesensor.h>
+#include <RASLib/inc/servo.h>
 
 //define components
 tBoolean initialized = false;
 tMotor *leftMotor;
 tMotor *rightMotor;
+tServo *gateServo;
 tADC *leftSensor;
-tADC *frontSensor;
+tADC *rightSensor;
 tLineSensor *lineSensor;
 
-//define constants
-#define min 0.7f //distance from wall in cm
-#define wallMin 0.4f
-#define max 0.4f
-#define cornerMax 0.2f
-#define leftMotorPin PIN_B2
-#define rightMotorPin PIN_B1
-#define leftSensorPin PIN_D0
-#define frontSensorPin PIN_D1
+//define pins
+#define gateServoPin PIN_B2
+#define leftMotorPin PIN_B6
+#define rightMotorPin PIN_A4
+#define leftSensorPin PIN_E0
+#define rightSensorPin PIN_B5
 #define blueLEDPin PIN_F2
 #define greenLEDPin PIN_F3
+#define linePin1 PIN_A7
+#define linePin2 PIN_A6
+#define linePin3 PIN_A5
+#define linePin4 PIN_B4
+#define linePin5 PIN_E5
+#define linePin6 PIN_E4
+#define linePin7 PIN_B1
+#define linePin8 PIN_B0
 
 void blueLight();
 void greenLight();
@@ -39,42 +46,9 @@ int main(void) {
 
 	while (1) {
 		//distance = 7.83/ADCRead(Sensor)-1.66;
-		float current = ADCRead(leftSensor);
-		float front = ADCRead(frontSensor);
-
-
-		if (current < cornerMax){
-			leftTurn(current);
-		}
-		if (front > wallMin) {
-			rightTurn();
-		}
-
-		/*while (current < max) {
-			blueLight();
-			SetMotor(leftMotor, 0.3);
-			SetMotor(rightMotor,0.7);
-			Wait(0.05);
-			SetMotor(leftMotor, 0.7);
-			SetMotor(rightMotor, 0.3);
-			Wait(0.05);
-			current = ADCRead(leftSensor);
-		}
-
-		while (current > min) {
-			blueLight();
-			SetMotor(leftMotor,0.7);
-			SetMotor(rightMotor,0.3);
-			Wait(0.05);
-			SetMotor(leftMotor,0.3);
-			SetMotor(rightMotor,0.7);
-			Wait(0.05);
-			current = ADCRead(leftSensor);
-		}*/
-
-		greenLight();
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
+		float left = ADCRead(leftSensor);
+		float right = ADCRead(rightSensor);
+		Printf("left: %f right: %f\n", left, right);
 	}
 }
 
@@ -88,7 +62,7 @@ void setup(void) {
 	leftMotor = InitializeServoMotor(leftMotorPin, false);
 	rightMotor  = InitializeServoMotor(rightMotorPin, true);
 	leftSensor = InitializeADC(leftSensorPin);
-	frontSensor = InitializeADC(frontSensorPin);
+	rightSensor = InitializeADC(rightSensorPin);
 }
 
 void leftTurn(float current) {
