@@ -1,26 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/common.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/gpio.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/time.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/motor.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/adc.h>
-#include </home/mixs/ras/Rasware/RASLib/inc/linesensor.h>
+#include <RASLib/inc/common.h>
+#include <RASLib/inc/gpio.h>
+#include <RASLib/inc/time.h>
+#include <RASLib/inc/motor.h>
+#include <RASLib/inc/adc.h>
+#include <RASLib/inc/linesensor.h>
+#include <RASLib/inc/servo.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/common.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/gpio.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/time.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/motor.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/adc.h>
+// #include </home/mixs/ras/Rasware/RASLib/inc/linesensor.h>
 
 //define components
 tBoolean initialized = false;
 tMotor *leftMotor;
 tMotor *rightMotor;
+tServo *gateServo;
 tADC *leftSensor;
 tADC *rightSensor;
 tLineSensor *lineSensor;
 
 //define constants
-#define min 10.0f //distance from wall in cm
-#define max 20.0f
 #define distanceOfTheWall 0.8 // TODO
 #define leftMotorPin PIN_B6
 #define rightMotorPin PIN_A4
+#define gateServoPin PIN_B2
 #define leftSensorPin PIN_E0
 #define rightSensorPin PIN_E5
 #define blueLEDPin PIN_F2
@@ -33,8 +40,7 @@ tLineSensor *lineSensor;
 		PIN_E4, \
 		PIN_B1, \
 		PIN_B0  //right to left, line sensor pins
-#define nLineSensor 7
-#define gateServoPin PIN_B2
+#define nLineSensor 8
 
 //variables
 tBoolean driveLeft;
@@ -134,6 +140,7 @@ void setup(void) {
 
 	leftMotor = InitializeServoMotor(leftMotorPin, false);
 	rightMotor  = InitializeServoMotor(rightMotorPin, true);
+	gateServo = InitializeServo(gateServoPin);
 	leftSensor = InitializeADC(leftSensorPin);
 	rightSensor = InitializeADC(rightSensorPin);
 	ADCReadContinuously(leftSensor,0.01);
@@ -211,55 +218,63 @@ tBoolean isTheWall() {
 }
 
 void walkLine(void) { // TODO
+	tBoolean closed = false;
 	int current = getLine();
 
     switch(current){
     	case 0:  //turn right
+    		//blueLight();
+    		SetServo(gateServo,0.5);
+    		closed = true;
     		while (!(current == 3 || current == 4)) {
 	    		SetMotor(leftMotor,0.5);
 	    		SetMotor(rightMotor,-0.2);
 	    		current = getLine();
-	    		// Printf("x0");
 	    	}
+	    	//greenLight();
     		break;
     	case 1:
+    		SetServo(gateServo,0.5);
+    		closed = true;
     		SetMotor(leftMotor,0.5);
     		SetMotor(rightMotor,0);
-    		// Printf("x1");
     		break;
     	case 2:
     		SetMotor(leftMotor,0.5);
     		SetMotor(rightMotor,0.2);
-    		// Printf("x2");
     		break;
     	case 3:
     		SetMotor(leftMotor,0.5);
     		SetMotor(rightMotor,0.5);
-    		// Printf("x3");
     		break;
     	case 4:
     		SetMotor(leftMotor,0.5);
     		SetMotor(rightMotor,0.5);
-    		// Printf("x4");
     		break;
     	case 5:
     		SetMotor(leftMotor,0.2);
     		SetMotor(rightMotor,0.5);
-    		// Printf("x5");
     		break;
     	case 6:
+    		SetServo(gateServo,0.5);
+    		closed = true;
     		SetMotor(leftMotor,0);
     		SetMotor(rightMotor,0.5);
-    		// Printf("x6");
     		break;
     	case 7:  //turn left
+    		//blueLight();
+    		SetServo(gateServo,0.5);
+    		closed = true;
     		while (!(current == 3 || current == 4)) {
 	    		SetMotor(leftMotor,-0.2);
 	    		SetMotor(rightMotor,0.5);
 	    		current = getLine();
-	    		Printf("x7");
 	    	}
+	    	//greenLight();
     		break;
+    }
+    if (closed) {
+    	SetServo(gateServo,0);
     }
 }
 
@@ -280,7 +295,9 @@ void walkForward(tBoolean onForward) {
 }
 
 void grabBall() {
-	// TODO
+	SetServo(gateServo,0.5);
+	Wait(1);
+	SetServo(gateServo,0);
 }
 
 void grabSideBall(tBoolean onLeft) {
