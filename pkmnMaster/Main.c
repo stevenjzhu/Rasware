@@ -42,6 +42,7 @@ tLineSensor *lineSensor;
 
 //variables
 tBoolean driveLeft;
+tBoolean runPrimary;
 tBoolean running;
 
 void setup();
@@ -53,6 +54,8 @@ tBoolean isLineThick();
 tBoolean isTheWall();
 void chooseLeft();
 void chooseRight();
+void choosePrimary();
+void chooseSecondary();
 void walkLine();
 void turnAround();
 void walkForward(tBoolean onForward);
@@ -67,72 +70,81 @@ int main(void) {
 	setup();
 	// walkForward(true);
 
-    while(!running){
-    	CallOnPinRising(chooseLeft, 0, PIN_F0);
-    	CallOnPinRising(chooseRight,0, PIN_F4);
+    //use button to choose side
+    // while(!running){
+    // 	CallOnPinRising(chooseLeft, 0, PIN_F0);
+    // 	CallOnPinRising(chooseRight,0, PIN_F4);
+    // }
+
+    //use button to choose stage
+    while(!running) {
+    	CallOnPinRising(choosePrimary, 0, PIN_F0);
+    	CallOnPinRising(chooseSecondary,0, PIN_F4);
     }
 
-	// zone1
-	reportZone(1); // green
-	while(!isLineThick()) {
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
+    if (runPrimary) {
+    	// zone1
+		reportZone(1); // green
+		while(!isLineThick()) {
+			SetMotor(leftMotor, 1);
+			SetMotor(rightMotor, 1);
+		}
+		walkForward(true);
+	
+		// zone2
+		reportZone(2); // blue
+		while(!isLineSplit()) {
+			walkLine();
+		}
+		walkForward(true);	//to make sure we can capture the pokemon in the center
+		turnAround();
+		walkForward(true);
+	
+		// zone3
+		reportZone(3); // light blue
+		while(!isLineThick()) {
+			walkLine();
+		}
+		walkForward(true);
+	
+		// zone4
+		reportZone(4); // black
+		while(!isLineThick()) {
+			SetMotor(leftMotor, 1);
+			SetMotor(rightMotor, 1);
+		}
+		walkForward(true);
+	
+		// zone5
+		reportZone(5); // green
+		while(!isTheWall()) {
+			walkLine();
+		}
+		walkForward(true);
+	
+		// zone6
+		reportZone(6); // blue
+		grabSideBall(driveLeft);
+	
+		// zone7
+		reportZone(7); // light blue
+		while(!isLineSplit()) {
+			walkLine();
+		}
+		turn90Degree(true, driveLeft);
+		walkForward(true);
+	
+		// zone8
+		reportZone(8); // black
+		while(true) { // TODO, what to detect the end?
+			walkLine();
+		}
 	}
-	walkForward(true);
-
-	// zone2
-	reportZone(2); // blue
-	while(!isLineSplit()) {
-		walkLine();
-	}
-	walkForward(true);	//to make sure we can capture the pokemon in the center
-	turnAround();
-	walkForward(true);
-
-	// zone3
-	reportZone(3); // light blue
-	while(!isLineThick()) {
-		walkLine();
-	}
-	walkForward(true);
-
-	// zone4
-	reportZone(4); // black
-	while(!isLineThick()) {
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
-	}
-	walkForward(true);
-
-	// zone5
-	reportZone(5); // green
-	while(!isTheWall()) {
-		walkLine();
-	}
-	walkForward(true);
-
-	// zone6
-	reportZone(6); // blue
-	grabSideBall(driveLeft);
-
-	// zone7
-	reportZone(7); // light blue
-	while(!isLineSplit()) {
-		walkLine();
-	}
-	turn90Degree(true, driveLeft);
-	walkForward(true);
-
-	// zone8
-	reportZone(8); // black
-	while(true) { // TODO, what to detect the end?
-		walkLine();
-	}
-
-	// zonex
-	reportZone(9); // green
-	while(true) {
-		// TBD, grab pokeballs continuously?
+	else {
+		reportZone(9); // green
+		while(true) {
+			// TBD, grab pokeballs continuously?
+		}
 	}
 }
 
@@ -154,8 +166,18 @@ void setup(void) {
 	ADCReadContinuously(leftSensor,0.01);
 	ADCReadContinuously(rightSensor,0.01);
 	lineSensor = InitializeGPIOLineSensor(lineSensorList);
+
+	float left = getDistance(leftSensor);
+	float right = getDistance(rightSensor);
+	if (left < right) {
+		driveLeft = true;
+	}
+	else {
+		driveLeft = false;
+	}
 }
 
+//use button to choose side of field
 void chooseLeft(void) {
 	running = true;
 	driveLeft = true;
@@ -164,6 +186,17 @@ void chooseLeft(void) {
 void chooseRight(void) {
 	running = true;
 	driveLeft = false;
+}
+
+//use button to choose status of game
+void choosePrimary(void) {
+	running = true;
+	runPrimary = true;
+}
+
+void chooseSecondary(void) {
+	running = true;
+	runPrimary = false;
 }
 
 tBoolean isBlack(float line) {
@@ -195,6 +228,7 @@ int getLine(void) { // TODO
 
 float getDistance(tADC *sensor) {
 	// return 7.83/ADCRead(sensorPin)-1.66;
+	// TODO: Average value for more accurate reading
 	return ADCRead(sensor);
 }
 
