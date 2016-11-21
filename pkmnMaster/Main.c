@@ -90,10 +90,11 @@ int main(void) {
 		while(!isLineSplit()) {
 			walkLine();
 		}
-		walkForward(true, 1.5);	//to make sure we can capture the pokemon in the center
-		walkForward(false, 1.35);
-		turn90Degree(true, driveLeft);
+		// walkForward(true, 1.5);	//to make sure we can capture the pokemon in the center
+		// walkForward(false, 1.35);
 		walkForward(true, 0.3);
+		turn90Degree(true, driveLeft);
+		walkForward(true, 0.5);
 		// walkLineTime(0.5);
 	
 		// zone3: find the wall
@@ -448,139 +449,6 @@ void walkForward(tBoolean onForward, float time) {
 		SetMotor(leftMotor, -1);	
 	}
 	Wait(time);
-	SetMotor(leftMotor, 0);
-	SetMotor(rightMotor,0);
-}
-
-void grabBall() {
-	SetServo(gateServo,0.7);
-	closed = true;
-}
-
-void grabSideBall(tBoolean onLeft) {
-	turn90Degree(true, onLeft);
-	grabBall();
-	turn90Degree(false, onLeft);
-}
-
-void turn90Degree(tBoolean onForward, tBoolean onLeft) {
-	float leftMotorPower = (onLeft?-0.1:1);
-	float rightMotorPower = (onLeft?1:-0.1);
-	leftMotorPower *= (onForward?1:-1);
-	rightMotorPower *= (onForward?1:-1);
-	SetMotor(leftMotor, leftMotorPower);
-	SetMotor(rightMotor,rightMotorPower);
-	Wait(1.45);
-	SetMotor(leftMotor, 0);
-	SetMotor(rightMotor,0);
-}
-
-// white -> red -> yellow -> green -> light blue -> blue -> purple -> black
-const int __reportLight__[8][3] = {{1, 1, 1}, {1, 0, 0}, {1, 1, 0}, 
-                                   {0, 1, 0}, {0, 1, 1}, {0, 0, 1},
-                                   {1, 0, 1}, {0, 0, 0}};
-// const int __reportLight__[4][2] = {{0,0}, {1, 0}, {0, 1}, {1, 1}};
-const int __n_reportLight__ = 8;
-void reportZone(int zone) {
-	int r = __reportLight__[zone%__n_reportLight__][0];
-	int g = __reportLight__[zone%__n_reportLight__][1];
-	int b = __reportLight__[zone%__n_reportLight__][2];
-	// SetPin(redLEDPin, r);s
-	SetPin(blueLEDPin, g);
-    SetPin(greenLEDPin, b);
-}ght = true;
-    		break;
-    	case 4:
-    		SetMotor(leftMotor,0.5);
-    		SetMotor(rightMotor,0.5);
-    		straight = true;
-    		break;
-    	case 5:
-    		SetMotor(leftMotor,0.2);
-    		SetMotor(rightMotor,0.5);
-    		straight = true;
-    		break;
-    	case 6:
-<<<<<<< HEAD
-    		SetServo(gateServo,0.7);
-    		closed = true;
-=======
-    		// SetServo(gateServo,0.5);
-    		// closed = true;
->>>>>>> f0430b5303e144b468a85822402e8c49011eca14
-    		SetMotor(leftMotor,0);
-    		SetMotor(rightMotor,0.5);
-    		break;
-    	case 7:  //turn left
-<<<<<<< HEAD
-    		//blueLight();
-    		SetServo(gateServo,0.7);
-=======
-    		// blueLight();
-    		// SetServo(gateServo,0.5);
->>>>>>> f0430b5303e144b468a85822402e8c49011eca14
-    		closed = true;
-    		while (!(current == 3 || current == 4)) {
-	    		SetMotor(leftMotor,-0.2);
-	    		SetMotor(rightMotor,0.5);
-	    		current = getLine();
-	    	}
-	    	// greenLight();
-    		break;
-	    }
-	    if (closed && straight) {
-	    	SetServo(gateServo,0);
-	    }
-}
-
-void walkLineTime(float duration) {
-	float t1,t2;
-	t1 = GetTime();
-	t2 = GetTime();
-	while(duration > t2-t1) {
-		walkLine();
-		t2 = GetTime();
-	}
-}
-
-void turnAround(tBoolean onLeft) {
-	SetServo(gateServo,0.7);
-	if (onLeft) {
-		SetMotor(leftMotor, -1);
-		SetMotor(rightMotor,1);
-	}
-	else {
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor,-1);
-	}
-	// turn until there is line
-	// int line = getLine();
-	// while (line != 3 || line != 4) {
-	// 	line = getLine();
-	// }
-	Wait(1.8);
-	SetMotor(leftMotor, 0);
-	SetMotor(rightMotor,0);
-	SetServo(gateServo,0);
-}
-
-<<<<<<< HEAD
-void walkForward(tBoolean onForward, float time) {
-	if (onForward) {
-		SetMotor(rightMotor, 1);
-		SetMotor(leftMotor, 1);
-	}
-	else {
-		SetMotor(rightMotor, -1);
-		SetMotor(leftMotor, -1);	
-	}
-	Wait(time);
-=======
-void walkForward(tBoolean onForward) {
-	SetMotor(leftMotor, 1);
-	SetMotor(rightMotor,1);
-	Wait(0.3);
->>>>>>> f0430b5303e144b468a85822402e8c49011eca14
 	SetMotor(leftMotor, 0);
 	SetMotor(rightMotor,0);
 }
