@@ -42,6 +42,7 @@ tBoolean runPrimary;
 tBoolean closed;
 
 void setup();
+void getGreatBall();
 void run();
 void chooseLeft();
 void chooseRight();
@@ -77,40 +78,11 @@ int main(void) {
 	while (!running) {}
 
     if (runPrimary) {
-    	// zone1: escape the box
-		reportZone(1); // green
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
-		while(!isLineThick()) {
-		}
-		walkForward(true, 0.3);
-	
-		// zone2: get the middle one
-		reportZone(2); // blue
-		while(!isLineSplit()) {
-			walkLine();
-		}
-		// walkForward(true, 1.5);	//to make sure we can capture the pokemon in the center
-		// walkForward(false, 1.35);
-		walkForward(true, 0.3);
-		turn90Degree(true, driveLeft);
-		walkForward(true, 0.5);
-		// walkLineTime(0.5);
-	
-		// zone3: find the wall
-		reportZone(3); // light blue
-		while(!isTheWall(!driveLeft)) {
-			walkLine();
-		}
-		walkLineTime(0.7);
-
-		// zone4: get the ball
-		reportZone(4); // black
-		grabSideBall(!driveLeft);
+    	getGreatBall();
 	
 		// zone5: capture and turn aronud
 		reportZone(5); // green
-		walkLineTime(2.55);
+		walkLineTime(2.7);
 		turnAround(driveLeft);
 	
 		// zone6: detect edge of our field
@@ -118,21 +90,24 @@ int main(void) {
 		while(!isLineSplit()) {
 			walkLine();
 		}
-		walkForward(true, 1.2);
+		walkForward(true, 0.8);
 	
 		// zone7: crossing fields
 		reportZone(7); // light blue
 		if (driveLeft) {
 			SetMotor(leftMotor, 1);
-			SetMotor(rightMotor, 0.35);
+			SetMotor(rightMotor, 0.3);
 		}
 		else {
-			SetMotor(leftMotor, 0.35);
+			SetMotor(leftMotor, 0.2);
 			SetMotor(rightMotor, 1);
 		}
-		Wait(2);
+		Wait(1.8);
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 0.5);
 		while(!isLine()) {}
 		turn90Degree(true, driveLeft);
+		walkForward(true, 0.3);
 	
 		// zone8: got'em!!!
 		reportZone(8); // black
@@ -141,33 +116,7 @@ int main(void) {
 		}
 	}
 	else {
-		// zone1: escape the box
-		reportZone(1); // green
-		SetMotor(leftMotor, 1);
-		SetMotor(rightMotor, 1);
-		while(!isLineThick()) {
-		}
-		walkForward(true, 0.3);
-	
-		// zone2: get the middle one
-		reportZone(2); // blue
-		while(!isLineSplit()) {
-			walkLine();
-		}
-		walkForward(true, 0.3);
-		turn90Degree(true, driveLeft);
-		// walkLineTime(0.5);
-	
-		// zone3: find the wall
-		reportZone(3); // light blue
-		while(!isTheWall(!driveLeft)) {
-			walkLine();
-		}
-		walkLineTime(0.72);
-
-		// zone4: get the ball
-		reportZone(4); // black
-		grabSideBall(!driveLeft);
+		getGreatBall();
 	
 		// zone5: capture and turn aronud
 		reportZone(5); // green
@@ -226,6 +175,39 @@ void setup(void) {
 		// while(1) {}
 	}
 	SetServo(gateServo, 0);
+}
+
+void getGreatBall(void) {
+		// zone1: escape the box
+		reportZone(1); // green
+		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 1);
+		while(!isLineThick()) {
+		}
+		walkForward(true, 0.3);
+	
+		// zone2: get the middle one
+		reportZone(2); // blue
+		while(!isLineSplit()) {
+			walkLine();
+		}
+		// walkForward(true, 1.5);	//to make sure we can capture the pokemon in the center
+		// walkForward(false, 1.35);
+		walkForward(true, 0.36);
+		turn90Degree(true, driveLeft);
+		walkForward(true, 0.3);
+		// walkLineTime(0.5);
+	
+		// zone3: find the wall
+		reportZone(3); // light blue
+		while(!isTheWall(!driveLeft)) {
+			walkLine();
+		}
+		walkLineTime(0.7);
+
+		// zone4: get the ball
+		reportZone(4); // black
+		grabSideBall(!driveLeft);
 }
 
 void run(void) {
@@ -362,34 +344,34 @@ void walkLine(void) { // TODO
     	case 1:
     		SetServo(gateServo,0.7);
     		closed = true;
-    		SetMotor(leftMotor,0.5);
-    		SetMotor(rightMotor,0);
+    		SetMotor(leftMotor,0.7); //originla: 0.5
+    		SetMotor(rightMotor,0);  //originla: 0
     		break;
     	case 2:
-    		SetMotor(leftMotor,0.5);
-    		SetMotor(rightMotor,0.2);
+    		SetMotor(leftMotor,0.9);  //original: 0.5
+    		SetMotor(rightMotor,0.5);  //original: 0.2
     		straight = true;
     		break;
     	case 3:
-    		SetMotor(leftMotor,0.5);
-    		SetMotor(rightMotor,0.5);
+    		SetMotor(leftMotor,1);	//original: 0.5
+    		SetMotor(rightMotor,1);  //original: 0.5
     		straight = true;
     		break;
     	case 4:
-    		SetMotor(leftMotor,0.5);
-    		SetMotor(rightMotor,0.5);
+    		SetMotor(leftMotor,1);  //original: 0.5
+    		SetMotor(rightMotor,1);  //original: 0.5
     		straight = true;
     		break;
     	case 5:
-    		SetMotor(leftMotor,0.2);
-    		SetMotor(rightMotor,0.5);
+    		SetMotor(leftMotor,0.5);  //original: 0.2
+    		SetMotor(rightMotor,0.9);  //original: 0.5
     		straight = true;
     		break;
     	case 6:
     		SetServo(gateServo,0.7);
     		closed = true;
-    		SetMotor(leftMotor,0);
-    		SetMotor(rightMotor,0.5);
+    		SetMotor(leftMotor,0);  //originla: 0
+    		SetMotor(rightMotor,0.7);  //originla: 0.5
     		break;
     	case 7:  //turn left
     		//blueLight();
@@ -402,10 +384,10 @@ void walkLine(void) { // TODO
 	    	}
 	    	//greenLight();
     		break;
-	    }
-	    if (closed && straight) {
-	    	SetServo(gateServo,0);
-	    }
+	}
+    if (closed && straight) {
+    	SetServo(gateServo,0);
+    }
 }
 
 void walkLineTime(float duration) {
@@ -441,16 +423,14 @@ void turnAround(tBoolean onLeft) {
 
 void walkForward(tBoolean onForward, float time) {
 	if (onForward) {
-		SetMotor(rightMotor, 1);
 		SetMotor(leftMotor, 1);
+		SetMotor(rightMotor, 0.38);
 	}
 	else {
-		SetMotor(rightMotor, -1);
 		SetMotor(leftMotor, -1);	
+		SetMotor(rightMotor, -1);
 	}
 	Wait(time);
-	SetMotor(leftMotor, 0);
-	SetMotor(rightMotor,0);
 }
 
 void grabBall() {
@@ -460,6 +440,7 @@ void grabBall() {
 
 void grabSideBall(tBoolean onLeft) {
 	turn90Degree(true, onLeft);
+	Wait(0.1);
 	grabBall();
 	turn90Degree(false, onLeft);
 }
@@ -471,7 +452,7 @@ void turn90Degree(tBoolean onForward, tBoolean onLeft) {
 	rightMotorPower *= (onForward?1:-1);
 	SetMotor(leftMotor, leftMotorPower);
 	SetMotor(rightMotor,rightMotorPower);
-	Wait(1.45);
+	Wait(1.4);
 	SetMotor(leftMotor, 0);
 	SetMotor(rightMotor,0);
 }
